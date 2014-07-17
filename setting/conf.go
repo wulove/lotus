@@ -45,11 +45,13 @@ func LoadConfig() {
 
 	Cfg.BlockMode = false
 
-	beego.RunMode = Cfg.MustValue("app", "run_mode")
-	beego.HttpPort = Cfg.MustInt("app", "http_port")
+	beego.BeegoServerName = "lotus:" + APP_VER
+	beego.RunMode = Cfg.MustValue("app", "run_mode", "dev")
+	beego.HttpPort = Cfg.MustInt("app", "http_port", "4444")
 
 	IsProMode = beego.RunMode == "pro"
 	if IsProMode {
+		beego.EnableGzip = true
 		setLogs()
 	}
 	// cache system
@@ -62,16 +64,16 @@ func LoadConfig() {
 	beego.SessionOn = true
 	beego.SessionProvider = Cfg.MustValue("session", "session_provider", "memory")
 	if beego.SessionProvider == "file" || beego.SessionProvider == "mysql" || beego.SessionProvider == "redis" {
-		beego.SessionSavePath == Cfg.MustValue("session", "session_path", "sessions")
+		beego.SessionSavePath = Cfg.MustValue("session", "session_path", "sessions")
 	}
 	beego.SessionName = Cfg.MustValue("session", "session_name", "lotus_sess")
 	beego.SessionCookieLifeTime = Cfg.MustInt("session", "session_life_time", 0)
 	beego.SessionGCMaxLifetime = Cfg.MustInt64("session", "session_gc_time", 86400)
 
-	beego.EnableXSRF = Cfg.MustBool("xsrf", "xsrf_on")
+	beego.EnableXSRF = Cfg.MustBool("xsrf", "xsrf_on", true)
 	if beego.EnableXSRF {
 		beego.XSRFKEY = Cfg.MustValue("xsrf", "xsrf_key", "lotus_wulove")
-		beego.XSRFExpire = Cfg.MustInt64("xsrf", "xsrf_expire", 86400*30)
+		beego.XSRFExpire = Cfg.MustInt("xsrf", "xsrf_expire", 86400*30)
 	}
 
 	reloadConfig()
@@ -140,23 +142,23 @@ func getFileModTime(path string) (int64, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		beego.Error("Failed to open file[ %s ]\n", err)
-		return nil, err
+		return 0, err
 	}
 	defer f.Close()
 
 	fi, err := f.Stat()
 	if err != nil {
 		beego.Error("Failed to get file information[ %s ]\n", err)
-		return nil, err
+		return 0, err
 	}
 
-	return fi.ModTime().Unix()
+	return fi.ModTime().Unix(), nil
 
 }
 
 func setLogs() {
 	log := logs.NewLogger(10000)
-	logconf := new(map[string]interface{})
+	logconf := make(map[string]interface{})
 	logconf["filename"] = "logs/log.log"
 	logconf["level"] = logs.LevelInfo
 	logconf["maxsize"] = 1 << 35
