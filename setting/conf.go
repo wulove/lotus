@@ -105,11 +105,20 @@ func configWatcher() {
 						continue
 					}
 					beego.Info(event)
+					if err := Cfg.Reload(); err != nil {
+						beego.Error("Conf Reload: ", err)
+					}
+
+					reloadConfig()
+					beego.Info("Config Reloaded!")
 				}
 			}
 		}
 	}()
 
+	if err := watcher.AddWatch("conf", fsnotify.FSN_MODIFY); err != nil {
+		beego.Error("Watch dirpath(conf): ", err)
+	}
 }
 
 // checkEventTime return true if FileModTime does not change
