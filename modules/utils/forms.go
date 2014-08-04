@@ -1,17 +1,3 @@
-// Copyright 2013 wetalk authors
-//
-// Licensed under the Apache License, Version 2.0 (the "License"): you may
-// not use this file except in compliance with the License. You may obtain
-// a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-// License for the specific language governing permissions and limitations
-// under the License.
-
 package utils
 
 import (
@@ -26,7 +12,7 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/validation"
 
-	"github.com/beego/wetalk/setting"
+	"github.com/wulove/lotus/setting"
 )
 
 func init() {
@@ -343,12 +329,12 @@ func initCommonField() {
 	datetimeFunc := func(fSet *FieldSet) {
 		fSet.Field = func() template.HTML {
 			t := fSet.Value.(time.Time)
-			tval := beego.Date(t, setting.DateTimeFormat)
+			tval := beego.Date(t, "Y-m-d H:i:s")
 			if tval == "0001-01-01 00:00:00" {
 				t = time.Now()
 			}
 			if fSet.Type == "date" {
-				tval = beego.Date(t, setting.DateFormat)
+				tval = beego.Date(t, "Y-m-d")
 			}
 			return template.HTML(fmt.Sprintf(
 				`<input id="%s" name="%s" type="%s" value="%s" class="form-control"%s%s>`,
@@ -534,13 +520,13 @@ outFor:
 		case reflect.Struct:
 			if fT.Type.String() == "time.Time" {
 				if len(value) > 10 {
-					t, err := beego.DateParse(value, setting.DateTimeFormat)
+					t, err := beego.DateParse(value, "Y-m-d H:i:s")
 					if err != nil {
 						continue
 					}
 					f.Set(reflect.ValueOf(t))
 				} else {
-					t, err := beego.DateParse(value, setting.DateFormat)
+					t, err := beego.DateParse(value, "Y-m-d")
 					if err != nil {
 						continue
 					}

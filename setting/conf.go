@@ -12,6 +12,7 @@ import (
 	"github.com/astaxie/beego/cache"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/utils/captcha"
+	"github.com/beego/i18n"
 	"github.com/howeyc/fsnotify"
 )
 
@@ -23,6 +24,13 @@ var (
 	IsProMode bool
 	AppName   string
 	AppLogo   string
+	AppUrl    string
+	Langs     []string
+
+	LoginRememberDays  int
+	CookieRemerberName string
+	CookieUserName     string
+	LoginMaxRetries    int
 )
 
 var (
@@ -47,7 +55,7 @@ func LoadConfig() {
 
 	beego.BeegoServerName = "lotus:" + APP_VER
 	beego.RunMode = Cfg.MustValue("app", "run_mode", "dev")
-	beego.HttpPort = Cfg.MustInt("app", "http_port", "4444")
+	beego.HttpPort = Cfg.MustInt("app", "http_port", 8080)
 
 	IsProMode = beego.RunMode == "pro"
 	if IsProMode {
@@ -85,8 +93,33 @@ func LoadConfig() {
 func reloadConfig() {
 	AppName = Cfg.MustValue("app", "app_name", "Lotus")
 	beego.AppName = AppName
-
 	AppLogo = Cfg.MustValue("app", "app_logo")
+	AppUrl = Cfg.MustValue("app", "app_url")
+
+	LoginMaxRetries = Cfg.MustInt("app", "login_max_retries", 3)
+
+	LoginRememberDays = Cfg.MustInt("app", "login_remember_days", 7)
+	CookieRemerberName = Cfg.MustValue("app", "cookie_remember_name", "lotus_magic")
+	CookieUserName = Cfg.MustValue("app", "cookie_user_name", "lotus_power")
+}
+
+func settingLocales() {
+	// load locales with locale_LANG.ini files
+	langs := "en-US|zh-CN"
+	for _, lang := range strings.Split(langs, "|") {
+		lang = strings.TrimSpace(lang)
+		files := []string{"conf/" + "locale_" + lang + ".ini"}
+		if fh, err := os.Open(files[0]); err == nil {
+			fh.Close()
+		} else {
+			files = nil
+		}
+		if err := i18n.SetMessage(lang, "conf/global/"+"locale_"+lang+".ini", files...); err != nil {
+			beego.Error("Fail to set message file: " + err.Error())
+			os.Exit(2)
+		}
+	}
+	Langs = i18n.ListLangs()
 }
 
 var eventTime = make(map[string]int64)
@@ -161,7 +194,7 @@ func setLogs() {
 	logconf := make(map[string]interface{})
 	logconf["filename"] = "logs/log.log"
 	logconf["level"] = logs.LevelInfo
-	logconf["maxsize"] = 1 << 35
+	logconf["maxsize"] = 32 << 20
 	logconf["maxdays"] = 30
 
 	config, _ := json.Marshal(logconf)
