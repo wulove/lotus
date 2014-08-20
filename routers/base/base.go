@@ -35,6 +35,9 @@ func (this *BaseRouter) Prepare() {
 	this.Data["xsrf_token"] = this.XsrfToken()
 	this.Data["xsrf_html"] = template.HTML(this.XsrfFormHtml())
 
+	this.Data["delete_method"] = template.HTML(`<input type="hidden" name="_method" value="DELETE">`)
+	this.Data["put_method"] = template.HTML(`<input type="hidden" name="_method" value="PUT">`)
+
 	// Redirect to make URL clean.
 	if this.setLang() {
 		i := strings.Index(this.Ctx.Request.RequestURI, "?")

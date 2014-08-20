@@ -20,10 +20,6 @@ func init() {
 	initExtraField()
 }
 
-type FormLocaler interface {
-	Tr(string, ...interface{}) string
-}
-
 type FormHelper interface {
 	Helps() map[string]string
 }
@@ -43,19 +39,6 @@ type FieldFilter func(*FieldSet)
 var customCreaters = make(map[string]FieldCreater)
 
 var customFilters = make(map[string]FieldFilter)
-
-type fakeLocale struct{}
-
-func (*fakeLocale) Tr(text string, args ...interface{}) string {
-	return text
-}
-
-var fakeLocaler FormLocaler = new(fakeLocale)
-
-// register a custom label/input creater
-func RegisterFieldCreater(name string, field FieldCreater) {
-	customCreaters[name] = field
-}
 
 // register a custom label/input creater
 func RegisterFieldFilter(name string, field FieldFilter) {
@@ -82,13 +65,11 @@ type FieldSet struct {
 	Placeholder string
 	Attrs       string
 	FormElm     reflect.Value
-	Locale      FormLocaler
 }
 
 type FormSets struct {
 	FieldList []*FieldSet
 	Fields    map[string]*FieldSet
-	Locale    FormLocaler
 	inited    bool
 	form      interface{}
 	errs      map[string]*validation.ValidationError
@@ -96,20 +77,15 @@ type FormSets struct {
 
 func (this *FormSets) SetError(fieldName, errMsg string) {
 	if fSet, ok := this.Fields[fieldName]; ok {
-		fSet.Error = this.Locale.Tr(errMsg)
+		fSet.Error = errMsg
 	}
 }
 
 // create formSets for generate label/field html code
-func NewFormSets(form interface{}, errs map[string]*validation.ValidationError, locale FormLocaler) *FormSets {
+func NewFormSets(form interface{}, errs map[string]*validation.ValidationError) *FormSets {
 	fSets := new(FormSets)
 	fSets.errs = errs
 	fSets.Fields = make(map[string]*FieldSet)
-	if locale != nil {
-		fSets.Locale = locale
-	} else {
-		fSets.Locale = fakeLocaler
-	}
 
 	val := reflect.ValueOf(form)
 
@@ -217,7 +193,6 @@ outFor:
 		fSet.Value = value
 		fSet.Attrs = attrs
 		fSet.FormElm = elm
-		fSet.Locale = locale
 
 		if i := strings.IndexRune(fTyp, ','); i != -1 {
 			fSet.Type = fTyp[:i]
@@ -235,7 +210,6 @@ outFor:
 				fSet.LabelText = labels[name]
 			}
 		}
-		fSet.LabelText = locale.Tr(fSet.LabelText)
 
 		// get field help
 		if helps != nil {
@@ -243,14 +217,12 @@ outFor:
 				fSet.Help = helps[name]
 			}
 		}
-		fSet.Help = locale.Tr(helps[name])
 
 		if places != nil {
 			if _, ok := places[name]; ok {
 				fSet.Placeholder = places[name]
 			}
 		}
-		fSet.Placeholder = locale.Tr(fSet.Placeholder)
 
 		if len(fSet.Placeholder) > 0 {
 			fSet.Placeholder = fmt.Sprintf(` placeholder="%s"`, fSet.Placeholder)
