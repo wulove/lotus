@@ -14,8 +14,8 @@ func main() {
 
 	initialize()
 
-	beego.Info("AppPath:", beego.AppPath)
-	beego.Info(beego.AppName, setting.APP_VER)
+	beego.Informational("AppPath:", beego.AppPath)
+	beego.Informational(beego.AppName, setting.APP_VER)
 
 	beego.InsertFilter("/capata/*", beego.BeforeRouter, setting.Captcha.Handler)
 

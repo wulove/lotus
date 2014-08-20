@@ -15,8 +15,8 @@
 package mailer
 
 import (
-	"github.com/beego/wetalk/modules/models"
-	"github.com/beego/wetalk/setting"
+	"github.com/wulove/lotus/models"
+	"github.com/wulove/lotus/setting"
 )
 
 // Create New mail message use MailFrom and MailUser

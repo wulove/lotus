@@ -193,7 +193,7 @@ func setLogs() {
 	log := logs.NewLogger(10000)
 	logconf := make(map[string]interface{})
 	logconf["filename"] = "logs/log.log"
-	logconf["level"] = logs.LevelInfo
+	logconf["level"] = logs.LevelInformational
 	logconf["maxsize"] = 32 << 20
 	logconf["maxdays"] = 30
 
