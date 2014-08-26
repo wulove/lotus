@@ -11,9 +11,12 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/cache"
 	"github.com/astaxie/beego/logs"
+	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/utils/captcha"
 	"github.com/beego/i18n"
 	"github.com/howeyc/fsnotify"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 const (
@@ -82,6 +85,24 @@ func LoadConfig() {
 	if beego.EnableXSRF {
 		beego.XSRFKEY = Cfg.MustValue("xsrf", "xsrf_key", "lotus_wulove")
 		beego.XSRFExpire = Cfg.MustInt("xsrf", "xsrf_expire", 86400*30)
+	}
+
+	driverName := Cfg.MustValue("orm", "driver_name", "mysql")
+	dataSource := Cfg.MustValue("orm", "data_source", "root:root@/lotus?charset=utf8&loc=UTC")
+	maxIdle := Cfg.MustInt("orm", "max_idle_conn", 30)
+	maxOpen := Cfg.MustInt("orm", "max_open_conn", 50)
+
+	err = orm.RegisterDataBase("default", driverName, dataSource, maxIdle, maxOpen)
+	if err != nil {
+		beego.Error(err)
+	}
+	orm.RunCommand()
+	err = orm.RunSyncdb("default", false, false)
+	if err != nil {
+		beego.Error(err)
+	}
+	if !IsProMode {
+		orm.Debug = true
 	}
 
 	reloadConfig()

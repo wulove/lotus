@@ -1,12 +1,15 @@
 package models
 
 import (
-	_ "github.com/denisenkom/go-mssqldb"
-	"github.com/go-xorm/xorm"
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/orm"
 )
 
-var x *xorm.Engine
-
-func setEngine() {
-
+func CountObjects(qs orm.QuerySeter) (int64, error) {
+	n, err := qs.Count()
+	if err != nil {
+		beego.Error("models.CountObjects ", err)
+		return 0, err
+	}
+	return n, nil
 }
